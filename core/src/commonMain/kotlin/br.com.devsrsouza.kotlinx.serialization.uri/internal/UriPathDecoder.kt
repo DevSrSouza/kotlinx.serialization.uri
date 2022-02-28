@@ -70,11 +70,6 @@ internal class UriPathDecoder(
         return type?.let { JsonDecoderWrapper(descriptor, it) } ?: super.beginStructure(descriptor)
     }
 
-    // TODO: ?
-    override fun <T : Any> decodeNullableSerializableValue(deserializer: DeserializationStrategy<T?>): T? {
-        return super.decodeNullableSerializableValue(deserializer)
-    }
-
     private fun retrieveParamFromUri(desc: UriDesc): String? =
         when(desc.paramType) {
             ParamType.QUERY -> uri.getQueryParam(desc.elementName)

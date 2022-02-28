@@ -1,10 +1,16 @@
 import br.com.devsrsouza.kotlinx.serialization.uri.Path
 import br.com.devsrsouza.kotlinx.serialization.uri.Query
+import br.com.devsrsouza.kotlinx.serialization.uri.URI_PARAM_SCHEME_REGEX
 import br.com.devsrsouza.kotlinx.serialization.uri.Uri
+import br.com.devsrsouza.kotlinx.serialization.uri.UriData
 import br.com.devsrsouza.kotlinx.serialization.uri.UriPath
 import br.com.devsrsouza.kotlinx.serialization.uri.UriProvider
 import java.net.URI
+import java.net.URLDecoder
+import java.net.URLEncoder
+import java.nio.charset.Charset
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
 
 @Serializable
 data class Demo(
@@ -24,10 +30,18 @@ data class SomeObject(
     val bananas: String?
 )
 
+@Serializable
+data class EncodeTest(
+    @Path val name: String,
+    @Query val test: String,
+    @Query val encode: Int,
+    @Query val long: Long,
+)
+
 fun main() {
     val uriPath = UriPath(
         uriPathScheme = "/home/{name}",
-        uriProvider = JvmUriProvider(),
+        uriProvider = JvmUriProvider(shouldEncodeValues = true),
     )
     val result = uriPath.decodeFromString<Demo>(
         Demo.serializer(),
@@ -36,13 +50,51 @@ fun main() {
     )
 
     println(result)
+
+    val encodeResult = uriPath.encodeToString(
+        EncodeTest("Dota", "testing", 123, 456)
+    )
+
+    println(encodeResult)
 }
 
-class JvmUriProvider : UriProvider {
+class JvmUriProvider(
+    val shouldEncodeValues: Boolean,
+) : UriProvider {
     override fun uri(uriScheme: String, uri: String): Uri {
         return JvmUri(uriScheme, URI.create(uri))
     }
+
+    override fun createUriPath(uriScheme: String, uriData: UriData): String {
+        val queryParams = if(shouldEncodeValues)
+            uriData.queryParams.mapValues { URLEncoder.encode(it.value, Charsets.UTF_8) }
+        else
+            uriData.queryParams
+
+        val pathParams = if(shouldEncodeValues)
+            uriData.pathParams.mapValues { URLEncoder.encode(it.value, Charsets.UTF_8) }
+        else
+            uriData.pathParams
+
+        val pathResult = URI_PARAM_SCHEME_REGEX.replace(uriScheme) {
+            val paramName = it.groups.get(1)?.value ?: return@replace it.value
+
+            pathParams.get(paramName) ?: it.value
+        }
+
+        val queryResult = queryParams.toList().joinToString(separator = QUERY_PARAM_SEPARATOR) { (key, value) ->
+            "$key$QUERY_PARAM_EQUAL_OPERATOR$value"
+        }
+
+        return "$pathResult${if(queryParams.isNotEmpty()) "$QUERY_PARAM_INITIAL_OPERATOR$queryResult" else ""}"
+    }
 }
+
+
+internal const val QUERY_PARAM_SEPARATOR = "&"
+internal const val QUERY_PARAM_EQUAL_OPERATOR = "="
+internal const val QUERY_PARAM_INITIAL_OPERATOR = "?"
+
 
 class JvmUri(override val pathScheme: String, val uri: URI) : Uri {
     override val path: String = uri.path
@@ -60,11 +112,6 @@ class JvmUri(override val pathScheme: String, val uri: URI) : Uri {
             it.substringBefore(QUERY_PARAM_EQUAL_OPERATOR) to
                     it.substringAfter(QUERY_PARAM_EQUAL_OPERATOR)
         }
-    }
-
-    private companion object {
-        const val QUERY_PARAM_SEPARATOR = "&"
-        const val QUERY_PARAM_EQUAL_OPERATOR = "="
     }
 
 }

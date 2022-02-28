@@ -1,6 +1,7 @@
 package br.com.devsrsouza.kotlinx.serialization.uri
 
 import br.com.devsrsouza.kotlinx.serialization.uri.internal.UriPathDecoder
+import br.com.devsrsouza.kotlinx.serialization.uri.internal.UriPathEncoder
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.StringFormat
@@ -56,7 +57,17 @@ internal class UriSerializerImpl(
     }
 
     override fun <T> encodeToString(serializer: SerializationStrategy<T>, value: T): String {
-        TODO("Not yet implemented")
+        val queryParams = mutableMapOf<String, String>()
+        val pathParams = mutableMapOf<String, String>()
+        UriPathEncoder(queryParams = queryParams, pathParams = pathParams)
+            .encodeSerializableValue(serializer, value)
+
+        val data = UriData(
+            queryParams = queryParams,
+            pathParams = pathParams,
+        )
+
+        return uriProvider.createUriPath(uriPathScheme, data)
     }
 }
 
