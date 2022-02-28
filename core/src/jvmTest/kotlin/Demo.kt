@@ -5,12 +5,10 @@ import br.com.devsrsouza.kotlinx.serialization.uri.Uri
 import br.com.devsrsouza.kotlinx.serialization.uri.UriData
 import br.com.devsrsouza.kotlinx.serialization.uri.UriPath
 import br.com.devsrsouza.kotlinx.serialization.uri.UriProvider
-import java.net.URI
-import java.net.URLDecoder
-import java.net.URLEncoder
-import java.nio.charset.Charset
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
+import java.net.URI
+import java.net.URLEncoder
 
 @Serializable
 data class Demo(
@@ -66,12 +64,12 @@ class JvmUriProvider(
     }
 
     override fun createUriPath(uriScheme: String, uriData: UriData): String {
-        val queryParams = if(shouldEncodeValues)
+        val queryParams = if (shouldEncodeValues)
             uriData.queryParams.mapValues { URLEncoder.encode(it.value, Charsets.UTF_8) }
         else
             uriData.queryParams
 
-        val pathParams = if(shouldEncodeValues)
+        val pathParams = if (shouldEncodeValues)
             uriData.pathParams.mapValues { URLEncoder.encode(it.value, Charsets.UTF_8) }
         else
             uriData.pathParams
@@ -86,15 +84,13 @@ class JvmUriProvider(
             "$key$QUERY_PARAM_EQUAL_OPERATOR$value"
         }
 
-        return "$pathResult${if(queryParams.isNotEmpty()) "$QUERY_PARAM_INITIAL_OPERATOR$queryResult" else ""}"
+        return "$pathResult${if (queryParams.isNotEmpty()) "$QUERY_PARAM_INITIAL_OPERATOR$queryResult" else ""}"
     }
 }
-
 
 internal const val QUERY_PARAM_SEPARATOR = "&"
 internal const val QUERY_PARAM_EQUAL_OPERATOR = "="
 internal const val QUERY_PARAM_INITIAL_OPERATOR = "?"
-
 
 class JvmUri(override val pathScheme: String, val uri: URI) : Uri {
     override val path: String = uri.path
@@ -110,8 +106,7 @@ class JvmUri(override val pathScheme: String, val uri: URI) : Uri {
 
         return params.associate {
             it.substringBefore(QUERY_PARAM_EQUAL_OPERATOR) to
-                    it.substringAfter(QUERY_PARAM_EQUAL_OPERATOR)
+                it.substringAfter(QUERY_PARAM_EQUAL_OPERATOR)
         }
     }
-
 }

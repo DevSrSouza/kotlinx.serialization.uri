@@ -1,20 +1,12 @@
 package br.com.devsrsouza.kotlinx.serialization.uri.internal
 
 import br.com.devsrsouza.kotlinx.serialization.uri.Uri
-import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.StructureKind
 import kotlinx.serialization.encoding.CompositeDecoder
 import kotlinx.serialization.encoding.CompositeDecoder.Companion.DECODE_DONE
 import kotlinx.serialization.internal.TaggedDecoder
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.boolean
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 
 @OptIn(InternalSerializationApi::class)
 internal class UriPathDecoder(
@@ -30,7 +22,7 @@ internal class UriPathDecoder(
         if (descriptor.elementsCount == currentIndex) DECODE_DONE
         else {
             val tag = extractTag(descriptor, currentIndex)
-            if(tag.isOptional && retrieveParamFromUri(tag) == null) {
+            if (tag.isOptional && retrieveParamFromUri(tag) == null) {
                 currentIndex++
                 decodeElementIndex(descriptor)
             } else currentIndex++
@@ -60,7 +52,7 @@ internal class UriPathDecoder(
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder {
         // currentTagOrNull being null means that this descriptor is from the root class
-        if(currentTagOrNull == null) return this
+        if (currentTagOrNull == null) return this
 
         val rawJson = retrieveParamFromUri(currentTag)!!
         val jsonElement = json.parseToJsonElement(rawJson)
@@ -71,7 +63,7 @@ internal class UriPathDecoder(
     }
 
     private fun retrieveParamFromUri(desc: UriDesc): String? =
-        when(desc.paramType) {
+        when (desc.paramType) {
             ParamType.QUERY -> uri.getQueryParam(desc.elementName)
             ParamType.PATH -> uri.getPathParam(desc.elementName)
         }

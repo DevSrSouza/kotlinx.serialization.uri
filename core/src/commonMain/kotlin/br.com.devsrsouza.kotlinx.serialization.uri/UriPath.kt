@@ -37,7 +37,7 @@ interface UriPathSerializer : StringFormat {
      *
      * ex: /path?param={"name": "example"}
      */
-    //val structureFormat: StringFormat
+    // val structureFormat: StringFormat
 
     /**
      * A platform specific Uri logic provider.
@@ -70,4 +70,3 @@ internal class UriSerializerImpl(
         return uriProvider.createUriPath(uriPathScheme, data)
     }
 }
-

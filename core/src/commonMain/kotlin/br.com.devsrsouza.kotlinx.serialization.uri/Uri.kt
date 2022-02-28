@@ -32,7 +32,7 @@ interface Uri {
 
         val pathStart = pathScheme.substringBefore(keyScheme)
         val pathEnd = pathScheme.substringAfter(keyScheme)
-        val pathRegex = "^${pathStart}(.+)${pathEnd}$".toRegex()
+        val pathRegex = "^$pathStart(.+)$pathEnd$".toRegex()
 
         return pathRegex.find(path)?.groups?.firstOrNull()?.value
     }

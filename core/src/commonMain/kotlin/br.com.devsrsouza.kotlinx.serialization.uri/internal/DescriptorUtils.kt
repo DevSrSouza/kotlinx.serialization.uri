@@ -10,7 +10,7 @@ internal fun extractTag(
     index: Int
 ): UriDesc {
     val elementName = descriptor.getElementName(index)
-    val isNullable =  descriptor.getElementDescriptor(index).isNullable
+    val isNullable = descriptor.getElementDescriptor(index).isNullable
     val isOptional = descriptor.isElementOptional(index)
     val isPath = descriptor.findElementAnnotation<Path>(index) != null
     val isQuery = descriptor.findElementAnnotation<Query>(index) != null
@@ -19,13 +19,13 @@ internal fun extractTag(
         isPath -> ParamType.PATH
         isQuery -> ParamType.QUERY
         else -> throw SerializationException(
-            "UriPathSerializer: You forgot to define your property ${descriptor.serialName}.${elementName} with @Path or @Query."
+            "UriPathSerializer: You forgot to define your property ${descriptor.serialName}.$elementName with @Path or @Query."
         )
     }
     return UriDesc(elementName, paramType, isNullable, isOptional)
 }
 
-internal inline fun <reified A: Annotation> SerialDescriptor.findElementAnnotation(
+internal inline fun <reified A : Annotation> SerialDescriptor.findElementAnnotation(
     elementIndex: Int
 ): A? {
     return getElementAnnotations(elementIndex).find { it is A } as A?

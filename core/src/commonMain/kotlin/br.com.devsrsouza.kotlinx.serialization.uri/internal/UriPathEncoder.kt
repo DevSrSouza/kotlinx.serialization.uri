@@ -14,7 +14,7 @@ internal class UriPathEncoder(
     override fun shouldEncodeElementDefault(descriptor: SerialDescriptor, index: Int): Boolean = true
 
     override fun encodeTaggedValue(tag: UriDesc, value: Any) {
-        when(tag.paramType) {
+        when (tag.paramType) {
             ParamType.QUERY -> queryParams.put(tag.elementName, value.toString())
             ParamType.PATH -> pathParams.put(tag.elementName, value.toString())
         }

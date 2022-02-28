@@ -31,7 +31,7 @@ internal class JsonDecoderWrapper(
     private val currentIndexInUse get() = currentIndex - 1
 
     override fun decodeElementIndex(descriptor: SerialDescriptor): Int =
-        when(type) {
+        when (type) {
             is JsonElementType.JsonClass -> type.decodeElementIndexForClass(descriptor)
             is JsonElementType.JsonList -> type.decodeElementIndexForList(descriptor)
             is JsonElementType.JsonMap -> type.decodeElementIndexForMap(descriptor)
@@ -41,7 +41,7 @@ internal class JsonDecoderWrapper(
         if (descriptor.elementsCount == currentIndex) CompositeDecoder.DECODE_DONE
         else {
             val currentValue = element.get(descriptor.getTag(currentIndex).name)
-            if(descriptor.isElementOptional(currentIndex) && currentValue == null) {
+            if (descriptor.isElementOptional(currentIndex) && currentValue == null) {
                 currentIndex++
                 decodeElementIndex(descriptor)
             } else currentIndex++
@@ -56,7 +56,7 @@ internal class JsonDecoderWrapper(
         else currentIndex++
 
     override fun SerialDescriptor.getTag(index: Int): JsonTag =
-        if(type is JsonElementType.JsonClass)
+        if (type is JsonElementType.JsonClass)
             JsonTag(
                 name = getElementName(index),
                 descriptor = getElementDescriptor(index),
@@ -86,7 +86,7 @@ internal class JsonDecoderWrapper(
         withTag(tag) { findEnumIndexByElementName(retrieveValue()!!.jsonPrimitive.content, enumDescriptor)!! }
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder {
-        if(currentTagOrNull == null) return this
+        if (currentTagOrNull == null) return this
 
         val value = retrieveValue()!!
 
@@ -94,7 +94,6 @@ internal class JsonDecoderWrapper(
 
         return type?.let { JsonDecoderWrapper(descriptor, it) } ?: super.beginStructure(descriptor)
     }
-
 
     private fun <T> withTag(tag: JsonTag, context: () -> T): T {
         pushTag(tag)
@@ -104,14 +103,14 @@ internal class JsonDecoderWrapper(
         return result
     }
 
-    private fun retrieveValue(): JsonElement? = when(type) {
+    private fun retrieveValue(): JsonElement? = when (type) {
         is JsonElementType.JsonClass -> type.element.get(currentTag.name)
         is JsonElementType.JsonList -> type.element.get(currentIndexInUse)
         is JsonElementType.JsonMap -> type.element.get((currentIndexInUse) / 2).run {
-            if((currentIndexInUse) % 2 == 0) JsonPrimitive(key) else value
+            if ((currentIndexInUse) % 2 == 0) JsonPrimitive(key) else value
         }
     }
     private fun retrievePrimitiveValue(): JsonPrimitive? = retrieveValue()?.jsonPrimitive
     private fun <T> retrieveValueNumber(map: String.() -> T): T =
-            retrievePrimitiveValue()!!.takeUnless { it.isString }!!.content.map()
+        retrievePrimitiveValue()!!.takeUnless { it.isString }!!.content.map()
 }
