@@ -56,14 +56,23 @@ fun main() {
     )
     val result = uriPath.decodeFromString<Demo>(
         Demo.serializer(),
-        // https://someendpoint.com/home/Ronaldo?test=something with space&demo=asdasda&something={"example":"test","batata":"com feijao"}&list=["one","two","three"]&map={"test":"value","test2":"second"}
-        "https://someendpoint.com/home/Ronaldo?test=something%20with%20space&demo=asdasda&something=%7B%22example%22%3A%22test%22%2C%22batata%22%3A%22com%20feijao%22%7D&list=%5B%22one%22%2C%22two%22%2C%22three%22%5D&map=%7B%22test%22%3A%22value%22%2C%22test2%22%3A%22second%22%7D"
+        // /home/Ronaldo?test=something with space&demo=asdasda&something={"example":"test","batata":"com feijao"}&list=["one","two","three"]&map={"test":"value","test2":"second"}
+        "/home/Ronaldo?test=something%20with%20space&demo=asdasda&something=%7B%22example%22%3A%22test%22%2C%22batata%22%3A%22com%20feijao%22%7D&list=%5B%22one%22%2C%22two%22%2C%22three%22%5D&map=%7B%22test%22%3A%22value%22%2C%22test2%22%3A%22second%22%7D"
     )
 
     println(result)
 
     val encodeResult = uriPath.encodeToString(
-        EncodeTest("Dota", 123, EncodeObj("somevalue", Second("aaaaaa"), mapOf("batata" to "vaue", "arroz" to "feijao")), listOf("batinha", "123brow"))
+        EncodeTest(
+            "Dota",
+            123,
+            EncodeObj(
+                "somevalue",
+                Second("aaaaaa"),
+                mapOf("batata" to "vaue", "arroz" to "feijao")
+            ),
+            listOf("batinha", "123brow")
+        )
     )
 
     println(encodeResult)
@@ -73,7 +82,8 @@ class JvmUriProvider(
     val shouldEncodeValues: Boolean,
 ) : UriProvider {
     override fun uri(uriScheme: String, uri: String): Uri {
-        return JvmUri(uriScheme, URI.create(uri))
+        val jvmUri = runCatching { URI.create("https://endpoint.domain$uri") }.getOrThrow()
+        return JvmUri(uriScheme, jvmUri)
     }
 
     override fun createUriPath(uriScheme: String, uriData: UriData): String {

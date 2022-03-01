@@ -45,6 +45,17 @@ interface UriPathSerializer : StringFormat {
      * see [AndroidUri], [JvmUri], [MultiplatformUri].
      */
     val uriProvider: UriProvider
+
+    /**
+     * Same idea as [StringFormat.encodeToString] but the value should be a URI path
+     * only, not the full uri with scheme, endpoint, etc.
+     *
+     * Examples:
+     * Scheme: /my/path/{name}
+     * /my/path/Name?key=value&second=value2
+     *
+     */
+    override fun <T> decodeFromString(deserializer: DeserializationStrategy<T>, string: String): T
 }
 
 internal class UriSerializerImpl(
