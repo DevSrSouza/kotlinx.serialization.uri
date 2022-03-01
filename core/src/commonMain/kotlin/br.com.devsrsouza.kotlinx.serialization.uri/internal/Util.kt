@@ -6,11 +6,20 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 
-internal fun SerialDescriptor.jsonElementType(element: JsonElement): JsonElementType? {
+internal fun SerialDescriptor.jsonDecodeElementType(element: JsonElement): JsonDecodeElementType? {
     return when (kind) {
-        StructureKind.CLASS -> JsonElementType.JsonClass(element.jsonObject)
-        StructureKind.LIST -> JsonElementType.JsonList(element.jsonArray)
-        StructureKind.MAP -> JsonElementType.JsonMap(element.jsonObject.entries.toList())
+        StructureKind.CLASS -> JsonDecodeElementType.JsonClass(element.jsonObject)
+        StructureKind.LIST -> JsonDecodeElementType.JsonList(element.jsonArray)
+        StructureKind.MAP -> JsonDecodeElementType.JsonMap(element.jsonObject.entries.toList())
+        else -> null
+    }
+}
+
+internal fun SerialDescriptor.jsonEncodeElementType(): JsonEncodeElementType? {
+    return when (kind) {
+        StructureKind.CLASS -> JsonEncodeElementType.JsonClass(mutableMapOf())
+        StructureKind.LIST -> JsonEncodeElementType.JsonList(mutableListOf())
+        StructureKind.MAP -> JsonEncodeElementType.JsonMap(mutableMapOf())
         else -> null
     }
 }

@@ -16,28 +16,28 @@ internal data class JsonTag(
     val descriptor: SerialDescriptor,
 )
 
-internal sealed interface JsonElementType {
-    class JsonClass(val element: JsonObject) : JsonElementType
-    class JsonList(val element: JsonArray) : JsonElementType
-    class JsonMap(val element: List<Map.Entry<String, JsonElement>>) : JsonElementType
+internal sealed interface JsonDecodeElementType {
+    class JsonClass(val element: JsonObject) : JsonDecodeElementType
+    class JsonList(val element: JsonArray) : JsonDecodeElementType
+    class JsonMap(val element: List<Map.Entry<String, JsonElement>>) : JsonDecodeElementType
 }
 
 @OptIn(InternalSerializationApi::class)
 internal class JsonDecoderWrapper(
     val descriptor: SerialDescriptor,
-    val type: JsonElementType
+    val type: JsonDecodeElementType
 ) : TaggedDecoder<JsonTag>() {
     private var currentIndex = 0
     private val currentIndexInUse get() = currentIndex - 1
 
     override fun decodeElementIndex(descriptor: SerialDescriptor): Int =
         when (type) {
-            is JsonElementType.JsonClass -> type.decodeElementIndexForClass(descriptor)
-            is JsonElementType.JsonList -> type.decodeElementIndexForList(descriptor)
-            is JsonElementType.JsonMap -> type.decodeElementIndexForMap(descriptor)
+            is JsonDecodeElementType.JsonClass -> type.decodeElementIndexForClass(descriptor)
+            is JsonDecodeElementType.JsonList -> type.decodeElementIndexForList(descriptor)
+            is JsonDecodeElementType.JsonMap -> type.decodeElementIndexForMap(descriptor)
         }
 
-    private fun JsonElementType.JsonClass.decodeElementIndexForClass(descriptor: SerialDescriptor): Int =
+    private fun JsonDecodeElementType.JsonClass.decodeElementIndexForClass(descriptor: SerialDescriptor): Int =
         if (descriptor.elementsCount == currentIndex) CompositeDecoder.DECODE_DONE
         else {
             val currentValue = element.get(descriptor.getTag(currentIndex).name)
@@ -47,16 +47,16 @@ internal class JsonDecoderWrapper(
             } else currentIndex++
         }
 
-    private fun JsonElementType.JsonList.decodeElementIndexForList(descriptor: SerialDescriptor): Int =
+    private fun JsonDecodeElementType.JsonList.decodeElementIndexForList(descriptor: SerialDescriptor): Int =
         if (currentIndex == element.size) CompositeDecoder.DECODE_DONE
         else currentIndex++
 
-    private fun JsonElementType.JsonMap.decodeElementIndexForMap(descriptor: SerialDescriptor): Int =
+    private fun JsonDecodeElementType.JsonMap.decodeElementIndexForMap(descriptor: SerialDescriptor): Int =
         if (currentIndex == element.size * 2) CompositeDecoder.DECODE_DONE
         else currentIndex++
 
     override fun SerialDescriptor.getTag(index: Int): JsonTag =
-        if (type is JsonElementType.JsonClass)
+        if (type is JsonDecodeElementType.JsonClass)
             JsonTag(
                 name = getElementName(index),
                 descriptor = getElementDescriptor(index),
@@ -90,7 +90,7 @@ internal class JsonDecoderWrapper(
 
         val value = retrieveValue()!!
 
-        val type = descriptor.jsonElementType(value)
+        val type = descriptor.jsonDecodeElementType(value)
 
         return type?.let { JsonDecoderWrapper(descriptor, it) } ?: super.beginStructure(descriptor)
     }
@@ -104,9 +104,9 @@ internal class JsonDecoderWrapper(
     }
 
     private fun retrieveValue(): JsonElement? = when (type) {
-        is JsonElementType.JsonClass -> type.element.get(currentTag.name)
-        is JsonElementType.JsonList -> type.element.get(currentIndexInUse)
-        is JsonElementType.JsonMap -> type.element.get((currentIndexInUse) / 2).run {
+        is JsonDecodeElementType.JsonClass -> type.element.get(currentTag.name)
+        is JsonDecodeElementType.JsonList -> type.element.get(currentIndexInUse)
+        is JsonDecodeElementType.JsonMap -> type.element.get((currentIndexInUse) / 2).run {
             if ((currentIndexInUse) % 2 == 0) JsonPrimitive(key) else value
         }
     }

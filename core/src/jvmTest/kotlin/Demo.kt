@@ -31,15 +31,28 @@ data class SomeObject(
 @Serializable
 data class EncodeTest(
     @Path val name: String,
-    @Query val test: String,
     @Query val encode: Int,
-    @Query val long: Long,
+    @Query val encodeObj: EncodeObj,
+    @Query val list: List<String>,
+    @Query val default: String = "value",
+)
+
+@Serializable
+data class EncodeObj(
+    val insideJsonKey: String,
+    val second: Second,
+    val map: Map<String, String>,
+)
+
+@Serializable
+data class Second(
+    val nothing: String
 )
 
 fun main() {
     val uriPath = UriPath(
         uriPathScheme = "/home/{name}",
-        uriProvider = JvmUriProvider(shouldEncodeValues = true),
+        uriProvider = JvmUriProvider(shouldEncodeValues = false),
     )
     val result = uriPath.decodeFromString<Demo>(
         Demo.serializer(),
@@ -50,7 +63,7 @@ fun main() {
     println(result)
 
     val encodeResult = uriPath.encodeToString(
-        EncodeTest("Dota", "testing", 123, 456)
+        EncodeTest("Dota", 123, EncodeObj("somevalue", Second("aaaaaa"), mapOf("batata" to "vaue", "arroz" to "feijao")), listOf("batinha", "123brow"))
     )
 
     println(encodeResult)
@@ -64,13 +77,16 @@ class JvmUriProvider(
     }
 
     override fun createUriPath(uriScheme: String, uriData: UriData): String {
+        // TODO: replace with guava UrlEscapers
+        fun encode(value: String) = URLEncoder.encode(value, Charsets.UTF_8).replace("+", "%20")
+
         val queryParams = if (shouldEncodeValues)
-            uriData.queryParams.mapValues { URLEncoder.encode(it.value, Charsets.UTF_8) }
+            uriData.queryParams.mapValues { encode(it.value) }
         else
             uriData.queryParams
 
         val pathParams = if (shouldEncodeValues)
-            uriData.pathParams.mapValues { URLEncoder.encode(it.value, Charsets.UTF_8) }
+            uriData.pathParams.mapValues { encode(it.value) }
         else
             uriData.pathParams
 

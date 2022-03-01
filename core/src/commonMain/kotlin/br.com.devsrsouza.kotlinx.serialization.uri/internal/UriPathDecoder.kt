@@ -57,7 +57,7 @@ internal class UriPathDecoder(
         val rawJson = retrieveParamFromUri(currentTag)!!
         val jsonElement = json.parseToJsonElement(rawJson)
 
-        val type = descriptor.jsonElementType(jsonElement)
+        val type = descriptor.jsonDecodeElementType(jsonElement)
 
         return type?.let { JsonDecoderWrapper(descriptor, it) } ?: super.beginStructure(descriptor)
     }
