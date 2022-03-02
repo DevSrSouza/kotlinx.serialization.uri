@@ -8,3 +8,6 @@ out/
 !gradle-wrapper.jar
 !gradle-wrapper.properties
 .gradletasknamecache
+local.properties
+*.hprof
+kotlin-js-store/

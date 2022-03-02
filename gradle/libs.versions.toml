@@ -5,12 +5,15 @@ plugin-detekt = "1.19.0"
 
 kotlin = "1.6.10"
 ktxserialization = "1.3.2"
+guava = "31.0.1-jre"
 
 [libraries]
 plugin-android = { module = "com.android.tools.build:gradle", version.ref = "plugin-android" }
 plugin-kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 #plugin-ktxserialization = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }
 #plugin-ktlint = { module = "org.jlleitschuh.gradle:ktlint-gradle", version.ref = "plugin-ktlint" }
+
+guava = { module = "com.google.guava:guava", version.ref = "guava" }
 
 kotlin-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "ktxserialization" }
 kotlin-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "ktxserialization" }

@@ -19,7 +19,8 @@ internal fun extractTag(
         isPath -> ParamType.PATH
         isQuery -> ParamType.QUERY
         else -> throw SerializationException(
-            "UriPathSerializer: You forgot to define your property ${descriptor.serialName}.$elementName with @Path or @Query."
+            "UriPathSerializer: You forgot to define your property " +
+                "${descriptor.serialName}.$elementName with @Path or @Query."
         )
     }
     return UriDesc(elementName, paramType, isNullable, isOptional)

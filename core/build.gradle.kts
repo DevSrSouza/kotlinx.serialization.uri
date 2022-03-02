@@ -3,11 +3,6 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-repositories {
-    mavenCentral()
-    google()
-}
-
 kotlin {
     configure()
 
@@ -15,7 +10,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation(libs.kotlin.serialization.core)
-                implementation(libs.kotlin.serialization.json) // TODO: remove
+                implementation(libs.kotlin.serialization.json)
             }
         }
     }
