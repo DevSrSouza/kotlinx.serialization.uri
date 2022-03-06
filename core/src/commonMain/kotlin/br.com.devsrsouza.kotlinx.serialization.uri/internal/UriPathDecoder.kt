@@ -2,6 +2,7 @@ package br.com.devsrsouza.kotlinx.serialization.uri.internal
 
 import br.com.devsrsouza.kotlinx.serialization.uri.Uri
 import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.CompositeDecoder
 import kotlinx.serialization.encoding.CompositeDecoder.Companion.DECODE_DONE
@@ -37,18 +38,40 @@ internal class UriPathDecoder(
         return super.decodeTaggedValue(tag)
     }
 
-    // TODO: replace strict parsers with a SerializationException
-    override fun decodeTaggedBoolean(tag: UriDesc): Boolean = retrieveParamFromUri(tag)!!.lowercase()?.toBooleanStrict()
-    override fun decodeTaggedByte(tag: UriDesc): Byte = retrieveParamFromUri(tag)!!.toByte()
-    override fun decodeTaggedShort(tag: UriDesc): Short = retrieveParamFromUri(tag)!!.toShort()
-    override fun decodeTaggedInt(tag: UriDesc): Int = retrieveParamFromUri(tag)!!.toInt()
-    override fun decodeTaggedLong(tag: UriDesc): Long = retrieveParamFromUri(tag)!!.toLong()
-    override fun decodeTaggedFloat(tag: UriDesc): Float = retrieveParamFromUri(tag)!!.toFloat()
-    override fun decodeTaggedDouble(tag: UriDesc): Double = retrieveParamFromUri(tag)!!.toDouble()
-    override fun decodeTaggedChar(tag: UriDesc): Char = retrieveParamFromUri(tag)!!.takeIf { it.length == 1 }?.get(0)!!
-    override fun decodeTaggedString(tag: UriDesc): String = retrieveParamFromUri(tag)!!
+    override fun decodeTaggedBoolean(tag: UriDesc): Boolean = retrieveParamFromUriStrict(tag).lowercase()
+        .toBooleanStrictOrNull()
+        ?: throwParseFailure("true or false", "Boolean", tag)
+
+    override fun decodeTaggedByte(tag: UriDesc): Byte = retrieveParamFromUriStrict(tag).toByteOrNull()
+        ?: throwParseFailure("number", "Byte", tag)
+
+    override fun decodeTaggedShort(tag: UriDesc): Short = retrieveParamFromUriStrict(tag).toShortOrNull()
+        ?: throwParseFailure("number", "Short", tag)
+
+    override fun decodeTaggedInt(tag: UriDesc): Int = retrieveParamFromUriStrict(tag).toIntOrNull()
+        ?: throwParseFailure("number", "Int", tag)
+
+    override fun decodeTaggedLong(tag: UriDesc): Long = retrieveParamFromUriStrict(tag).toLongOrNull()
+        ?: throwParseFailure("number", "Long", tag)
+
+    override fun decodeTaggedFloat(tag: UriDesc): Float = retrieveParamFromUriStrict(tag).toFloatOrNull()
+        ?: throwParseFailure("floating number", "Float", tag)
+
+    override fun decodeTaggedDouble(tag: UriDesc): Double = retrieveParamFromUriStrict(tag).toDoubleOrNull()
+        ?: throwParseFailure("floating number", "Float", tag)
+
+    override fun decodeTaggedChar(tag: UriDesc): Char = retrieveParamFromUriStrict(tag).takeIf { it.length == 1 }
+        ?.get(0)
+        ?: throwParseFailure("one char", "Char", tag)
+
+    override fun decodeTaggedString(tag: UriDesc): String = retrieveParamFromUriStrict(tag)
+
     override fun decodeTaggedEnum(tag: UriDesc, enumDescriptor: SerialDescriptor): Int =
-        findEnumIndexByElementName(retrieveParamFromUri(tag)!!, enumDescriptor)!!
+        findEnumIndexByElementName(retrieveParamFromUriStrict(tag), enumDescriptor)
+            ?: throw SerializationException(
+                "${tag.paramType.name} param '${tag.elementName}' with serial name '${tag.serialName}' is not " +
+                    "a value from enum with serial name '${enumDescriptor.serialName}'"
+            )
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder {
         // currentTagOrNull being null means that this descriptor is from the root class
@@ -67,4 +90,21 @@ internal class UriPathDecoder(
             ParamType.QUERY -> uri.getQueryParam(desc.elementName)
             ParamType.PATH -> uri.getPathParam(desc.elementName)
         }
+
+    private fun retrieveParamFromUriStrict(desc: UriDesc): String =
+        retrieveParamFromUri(desc) ?: throwFieldNotFound(desc)
+
+    private fun throwFieldNotFound(desc: UriDesc): Nothing {
+        throw SerializationException(
+            "Field '${desc.elementName}' is required in for type with serial name '${desc.serialName}', but it " +
+                "was missing on ${desc.paramType} param"
+        )
+    }
+
+    private fun throwParseFailure(expectedType: String, type: String, tag: UriDesc): Nothing {
+        throw SerializationException(
+            "${tag.paramType.name} param '${tag.elementName}' with serial name '${tag.serialName}' is not " +
+                "$expectedType value, could not parse to '$type'"
+        )
+    }
 }

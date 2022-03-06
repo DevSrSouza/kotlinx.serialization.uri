@@ -9,6 +9,7 @@ internal fun extractTag(
     descriptor: SerialDescriptor,
     index: Int
 ): UriDesc {
+    val serialName = descriptor.getElementDescriptor(index).serialName
     val elementName = descriptor.getElementName(index)
     val isNullable = descriptor.getElementDescriptor(index).isNullable
     val isOptional = descriptor.isElementOptional(index)
@@ -23,7 +24,7 @@ internal fun extractTag(
                 "${descriptor.serialName}.$elementName with @Path or @Query."
         )
     }
-    return UriDesc(elementName, paramType, isNullable, isOptional)
+    return UriDesc(serialName, elementName, paramType, isNullable, isOptional)
 }
 
 internal inline fun <reified A : Annotation> SerialDescriptor.findElementAnnotation(

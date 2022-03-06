@@ -1,6 +1,7 @@
 package br.com.devsrsouza.kotlinx.serialization.uri.internal
 
 import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.CompositeDecoder
 import kotlinx.serialization.internal.TaggedDecoder
@@ -8,8 +9,6 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.boolean
-import kotlinx.serialization.json.jsonPrimitive
 
 internal data class JsonTag(
     val name: String,
@@ -63,27 +62,66 @@ internal class JsonDecoderWrapper(
             )
         else
             JsonTag(
-                name = descriptor.serialName,
-                descriptor = descriptor
+                name = descriptor.getElementDescriptor(index).serialName,
+                descriptor = descriptor.getElementDescriptor(index)
             )
 
     override fun decodeTaggedNotNullMark(tag: JsonTag): Boolean =
         (tag.descriptor.isNullable && retrieveValue() == null).not()
 
-    override fun decodeTaggedBoolean(tag: JsonTag): Boolean = withTag(tag) { retrieveValue()!!.jsonPrimitive.boolean }
-    override fun decodeTaggedByte(tag: JsonTag): Byte = withTag(tag) { retrieveValueNumber(String::toByte) }
-    override fun decodeTaggedShort(tag: JsonTag): Short = withTag(tag) { retrieveValueNumber(String::toShort) }
-    override fun decodeTaggedInt(tag: JsonTag): Int = withTag(tag) { retrieveValueNumber(String::toInt) }
-    override fun decodeTaggedLong(tag: JsonTag): Long = withTag(tag) { retrieveValueNumber(String::toLong) }
-    override fun decodeTaggedFloat(tag: JsonTag): Float = withTag(tag) { retrieveValueNumber(String::toFloat) }
-    override fun decodeTaggedDouble(tag: JsonTag): Double = withTag(tag) { retrieveValueNumber(String::toDouble) }
+    override fun decodeTaggedBoolean(tag: JsonTag): Boolean = withTag(tag) {
+        val value = retrievePrimitiveValueStrict().content.lowercase()
+        value.toBooleanStrictOrNull()
+            ?: throw SerializationException(
+                "Unable to parse '$value' as type Boolean. Serial type '${tag.name}'"
+            )
+    }
+
+    override fun decodeTaggedByte(tag: JsonTag): Byte = withTag(tag) {
+        retrieveNumberValueStrict(String::toByteOrNull, "Byte")
+    }
+
+    override fun decodeTaggedShort(tag: JsonTag): Short = withTag(tag) {
+        retrieveNumberValueStrict(String::toShortOrNull, "Short")
+    }
+
+    override fun decodeTaggedInt(tag: JsonTag): Int = withTag(tag) {
+        retrieveNumberValueStrict(String::toIntOrNull, "Int")
+    }
+
+    override fun decodeTaggedLong(tag: JsonTag): Long = withTag(tag) {
+        retrieveNumberValueStrict(String::toLongOrNull, "Long")
+    }
+
+    override fun decodeTaggedFloat(tag: JsonTag): Float = withTag(tag) {
+        retrieveNumberValueStrict(String::toFloatOrNull, "Float")
+    }
+
+    override fun decodeTaggedDouble(tag: JsonTag): Double = withTag(tag) {
+        retrieveNumberValueStrict(String::toDoubleOrNull, "Double")
+    }
+
     override fun decodeTaggedChar(tag: JsonTag): Char =
         withTag(tag) {
-            retrievePrimitiveValue()!!.takeIf { it.isString }!!.content.takeIf { it.length == 1 }?.get(0)!!
+            val value = retrieveStringValueStrict()
+
+            value.takeIf { it.length == 1 }?.get(0)
+                ?: throw SerializationException(
+                    "Unable to decode '$value' because is not Char type. Serial type '${tag.name}'"
+                )
         }
-    override fun decodeTaggedString(tag: JsonTag): String = withTag(tag) { retrieveValue()!!.jsonPrimitive.content }
+
+    override fun decodeTaggedString(tag: JsonTag): String = withTag(tag) { retrieveStringValueStrict() }
+
     override fun decodeTaggedEnum(tag: JsonTag, enumDescriptor: SerialDescriptor): Int =
-        withTag(tag) { findEnumIndexByElementName(retrieveValue()!!.jsonPrimitive.content, enumDescriptor)!! }
+        withTag(tag) {
+            val value = retrieveStringValueStrict()
+            findEnumIndexByElementName(value, enumDescriptor)
+                ?: throw SerializationException(
+                    "Unable to decode'$value' as a Enum value from enum with serial name " +
+                        "'${enumDescriptor.serialName}'"
+                )
+        }
 
     override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder {
         if (currentTagOrNull == null) return this
@@ -110,7 +148,36 @@ internal class JsonDecoderWrapper(
             if ((currentIndexInUse) % 2 == 0) JsonPrimitive(key) else value
         }
     }
-    private fun retrievePrimitiveValue(): JsonPrimitive? = retrieveValue()?.jsonPrimitive
-    private fun <T> retrieveValueNumber(map: String.() -> T): T =
-        retrievePrimitiveValue()!!.takeUnless { it.isString }!!.content.map()
+
+    private fun retrieveValueStrict(): JsonElement =
+        retrieveValue() ?: throw SerializationException("Field '${currentTag.name}' is required, but it was missing")
+
+    private fun retrievePrimitiveValueStrict(): JsonPrimitive {
+        val value = retrieveValueStrict()
+        return value as? JsonPrimitive ?: throw SerializationException(
+            "Unable to decode '$value' as json primitive. Serial type '${currentTag.name}'"
+        )
+    }
+
+    private fun <T> retrieveNumberValueStrict(map: String.() -> T?, type: String): T {
+        val value = retrievePrimitiveValueStrict()
+
+        val result = value.takeUnless { it.isString }?.content ?: throw SerializationException(
+            "Unable to decode '$value' because is not a json number primitive. Serial type '${currentTag.name}'"
+        )
+
+        return result.map() ?: throw SerializationException(
+            "Unable to parse '$result' as type $type. Serial type '${currentTag.name}'"
+        )
+    }
+
+    private fun retrieveStringValueStrict(): String {
+        val value = retrievePrimitiveValueStrict()
+
+        return value.takeIf { it.isString }?.content
+            ?: throw SerializationException(
+                "Unable to decode '$value' because is not json string primitive. Serial type " +
+                    "'${currentTag.name}'"
+            )
+    }
 }
