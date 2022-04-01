@@ -10,6 +10,7 @@ import kotlinx.serialization.json.Json
 private val expectations = Expectations(
     expected = WithMap("test_name", mapOf("id" to "test")),
     expectedWithOptional = WithMapOptional("test_name_optional"),
+    expectedWithNullable = WithMapNullable("test_name_nullable", null),
     filterStringify = { Json {}.encodeToString(it) },
 )
 
@@ -24,6 +25,12 @@ data class WithMapOptional(
     @Path override val name: String,
     @Query override val filter: Map<String, String> = mapOf("test" to "optional"),
 ) : ExpectedType<Map<String, String>>
+
+@Serializable
+data class WithMapNullable(
+    @Path override val name: String,
+    @Query override val filter: Map<String, String>?,
+) : ExpectedType<Map<String, String>?>
 
 class NestedMapTest : FunSpec({
     decodeRootClassTest(expectations)
