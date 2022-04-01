@@ -8,13 +8,9 @@ pluginManagement {
 
 
 enableFeaturePreview("VERSION_CATALOGS")
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+//enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
-rootProject.name = "kotlinx-serialization-uri"
-
-include(":core")
-include(":jvm")
-include(":android")
+include(":kotlinx-serialization-uri")
 
 // preventing extra Gradle Daemon
 rootDir.resolve("gradle.properties").copyTo(
