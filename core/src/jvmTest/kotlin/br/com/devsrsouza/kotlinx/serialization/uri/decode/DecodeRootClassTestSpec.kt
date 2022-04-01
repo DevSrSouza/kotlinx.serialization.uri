@@ -6,7 +6,6 @@ import io.kotest.matchers.shouldBe
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.serializer
-import org.junit.jupiter.api.Test
 
 interface ExpectedType<T> {
     val name: String
@@ -14,11 +13,11 @@ interface ExpectedType<T> {
 }
 
 data class Expectations<
-        Type : ExpectedType<FilterType>,
-        TypeWithOptional : ExpectedType<FilterType>,
-        TypeWithNullable : ExpectedType<FilterType?>,
-        FilterType,
-        >(
+    Type : ExpectedType<FilterType>,
+    TypeWithOptional : ExpectedType<FilterType>,
+    TypeWithNullable : ExpectedType<FilterType?>,
+    FilterType,
+    >(
     val expected: Type,
     val expectedWithOptional: TypeWithOptional,
     val expectedWithNullable: TypeWithNullable,

@@ -21,7 +21,6 @@ class OptionalValuesTest {
         val uriPathWithoutFilter = "/$expectedName"
     }
 
-
     @Serializable
     data class WithOptional(
         @Path val name: String,

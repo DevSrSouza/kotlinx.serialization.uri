@@ -18,13 +18,11 @@ class NullableTypesTest {
         val uriPathWithoutFilter = "/$expectedName"
     }
 
-
     @Serializable
     data class WithNullable(
         @Path val name: String,
         @Query val filter: String?,
     )
-
 
     @Test
     fun `should output with filter null when there is not a available filter query param`() {

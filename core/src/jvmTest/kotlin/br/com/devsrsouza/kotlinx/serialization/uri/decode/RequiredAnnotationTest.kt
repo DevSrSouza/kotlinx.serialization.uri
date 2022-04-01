@@ -47,6 +47,4 @@ class RequiredAnnotationTest {
         result.name shouldBe expectedName
         result.filter shouldBe expectedFilter
     }
-
-
 }
