@@ -1,5 +1,6 @@
 import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.gradle.kotlin.dsl.*
 
@@ -11,6 +12,10 @@ fun KotlinMultiplatformExtension.configure() {
         withJava()
         testRuns["test"].executionTask.configure {
             useJUnitPlatform()
+            testLogging {
+                events = setOf(TestLogEvent.PASSED, TestLogEvent.SKIPPED, TestLogEvent.FAILED)
+            }
+
         }
     }
     js(BOTH) {

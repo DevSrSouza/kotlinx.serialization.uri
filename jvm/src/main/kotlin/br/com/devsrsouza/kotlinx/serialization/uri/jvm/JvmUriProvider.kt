@@ -10,7 +10,9 @@ class JvmUriProvider(
     val shouldEncodeValues: Boolean,
 ) : UriProvider {
     override fun uri(uriScheme: String, uri: String): Uri {
-        val jvmUri = runCatching { URI.create("https://endpoint.domain$uri") }.getOrThrow()
+        val escapedUrl = UrlEscapers.urlFragmentEscaper().escape("https://endpoint.domain$uri")
+        val jvmUri = URI.create(escapedUrl)
+
         return JvmUri(uriScheme, jvmUri)
     }
 

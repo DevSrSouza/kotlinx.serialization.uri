@@ -9,14 +9,14 @@ internal const val QUERY_PARAM_INITIAL_OPERATOR = "?"
 
 internal class JvmUri(override val pathScheme: String, val uri: URI) : Uri {
     override val path: String = uri.path
-    override val fullPath: String = uri.path
+    override val fullPath: String = uri.path // FIXME: this is not the fullpath with query
 
     private val queryParams: Map<String, String> = calculateQueryParam()
 
     override fun getQueryParam(key: String): String? = queryParams.get(key)
 
     private fun calculateQueryParam(): Map<String, String> {
-        val query = uri.query
+        val query = uri.query.orEmpty()
         val params = query.split(QUERY_PARAM_SEPARATOR)
 
         return params.associate {

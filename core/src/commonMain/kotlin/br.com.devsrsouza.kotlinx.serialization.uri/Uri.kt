@@ -25,7 +25,7 @@ interface Uri {
     fun getQueryParam(key: String): String?
 
     /**
-     * Gets a URL path param ex: /path/{name}/
+     * Gets a URL path param ex: /path/{name}
      */
     fun getPathParam(key: String): String? {
         val keyScheme = "{$key}"
@@ -34,6 +34,6 @@ interface Uri {
         val pathEnd = pathScheme.substringAfter(keyScheme)
         val pathRegex = "^$pathStart(.+)$pathEnd$".toRegex()
 
-        return pathRegex.find(path)?.groups?.firstOrNull()?.value
+        return pathRegex.find(path)?.groups?.get(1)?.value
     }
 }
